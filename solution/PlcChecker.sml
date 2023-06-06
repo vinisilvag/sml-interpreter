@@ -14,38 +14,39 @@ exception NotFunc
 exception ListOutOfRange
 exception OpNonList
 
-fun lookupType [] id = raise UnknownType
-  | lookupType ((k: string, t) :: tl) id = if k = id then t else lookupType tl id;
+(* temporary exception *)
+exception NotImplemented
 
 fun teval (e: expr) (env: plcType env): plcType = 
   case e of
       ConI _ => IntT
     | ConB _ => BoolT
-    | ESeq t' => 
-        case t' of
-            (SeqT t) => t
+    | ESeq seqType =>
+      let in
+        case seqType of
+            (SeqT t) => SeqT t (* t or SeqT t? *)
           | _ => raise EmptySeq
-    | Var x => lookupType x env
-    | Let(v, e1, e2) =>
+      end
+    | Var x => lookup env x
+    | Let(x, e1, e2) =>
       let
         val t = teval e1 env
-        val env' = (v, t) :: env
+        val env' = (x, t) :: env
       in
         teval e2 env'
       end
-    (* | Letrec(f, ft, p, pt, e1, e2) => ? (e1 e e2 são o que?) *)
+    | Letrec(f, ft, p, pt, e1, e2) => raise NotImplemented
     | Prim1(opr, e1) =>
       let
         val t1 = teval e1 env
       in
-        case (opr, t1) of
-            ("!", BoolT) => BoolT
-          | ("!", _) => raise ?
-          | ("-") => ?
-          | ("hd") => ?
-          | ("tl") => ?
-          | ("ise") => ?
-          | ("print") => ?
+        case opr of
+            ("!") => if t1 = BoolT then BoolT else raise UnknownType
+          | ("-") => if t1 = IntT then IntT else raise UnknownType
+          | ("hd") => raise NotImplemented
+          | ("tl") => raise NotImplemented
+          | ("ise") => raise NotImplemented
+          | ("print") => raise NotImplemented
       end
     | Prim2(opr, e1, e2) =>
       let
@@ -53,18 +54,18 @@ fun teval (e: expr) (env: plcType env): plcType =
         val t2 = teval e2 env
       in
         case opr of
-            ("&&") => ?
-          | ("+") => ?
-          | ("-") => ?
-          | ("*") => ?
-          | ("/") => ?
-          | ("=") => ?
-          | ("!=") => ?
-          | ("<") => ?
-          | ("<=") => ?
-          | ("::") => ?
-          | (";") => ?
-          (* | ("[") => ? *)
+            ("&&") => if t1 = BoolT andalso t2 = BoolT then BoolT else raise UnknownType
+          | ("+") => if t1 = IntT andalso t2 = IntT then IntT else raise UnknownType
+          | ("-") => if t1 = IntT andalso t2 = IntT then IntT else raise UnknownType
+          | ("*") => if t1 = IntT andalso t2 = IntT then IntT else raise UnknownType
+          | ("/") => if t1 = IntT andalso t2 = IntT then IntT else raise UnknownType
+          | ("=") => raise NotImplemented
+          | ("!=") => raise NotImplemented
+          | ("<") => if t1 = IntT andalso t2 = IntT then BoolT else raise UnknownType
+          | ("<=") => if t1 = IntT andalso t2 = IntT then BoolT else raise UnknownType
+          | ("::") => raise NotImplemented
+          | (";") => t2
+          | ("[") => raise NotImplemented
       end
     | If(c, t, e) =>
       let
@@ -76,9 +77,15 @@ fun teval (e: expr) (env: plcType env): plcType =
             BoolT => if tt = et then tt else raise DiffBrTypes
           | _ => raise IfCondNotBool
       end
-    (* | Match *)
-    (* | Call *)
-    (* | List *)
-    (* | Item *)
-    (* | Anon *)
+    (* | Match => raise NotImplemented
+    | Call => raise NotImplemented *)
+    | List(el) =>
+      let
+        fun typeList [] = []
+          | typeList (h::t) = teval h env :: (typeList t)
+      in
+        ListT (typeList el)
+      end
+    | Item(idx, e) => raise NotImplemented
+    | Anon(pt, p, e) => raise NotImplemented
     | _ => raise UnknownType;

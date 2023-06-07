@@ -32,15 +32,14 @@ fromString "match x with | 0 -> 1| _ -> -1 end";
 fromFile ("example.plc"); *)
 
 use "PlcChecker.sml";
-(* use "PlcInterp.sml"; *)
-(* use "Plc.sml"; *)
+use "PlcInterp.sml";
+use "Plc.sml";
 
-val abs = fromFile "tests/12.plc";
+val abs = fromFile "tests/7.plc";
 
-(* val v = eval abs venv; *)
+(* val v = eval abs venv;
 val tv = teval abs [];
 
-(* print("compilou") *)
-print("Type: " ^ type2string tv ^ "   ")
+print("Type: " ^ type2string tv ^ " : " ^ val2string v ) *)
 
-(* val r = run(abs); *)
+val r = run(abs);

@@ -35,7 +35,7 @@ use "PlcChecker.sml";
 (* use "PlcInterp.sml"; *)
 (* use "Plc.sml"; *)
 
-val abs = fromFile "tests/10.plc";
+val abs = fromFile "tests/12.plc";
 
 (* val v = eval abs venv; *)
 val tv = teval abs [];

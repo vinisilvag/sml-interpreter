@@ -17,16 +17,23 @@ exception OpNonList
 (* temporary exception *)
 exception NotImplemented
 
+fun isEqualityType t =
+  case t of
+      IntT => true
+    | BoolT => true
+    | ListT [] => true
+    | (SeqT seqType) => isEqualityType seqType 
+    | _ => false
+
 fun teval (e: expr) (env: plcType env): plcType = 
   case e of
       ConI _ => IntT
     | ConB _ => BoolT
-    | ESeq seqType =>
-      let in
-        case seqType of
-            (SeqT t) => SeqT t (* t or SeqT t? *)
-          | _ => raise EmptySeq
-      end
+    | ESeq seqType => (
+      case seqType of
+          (SeqT t) => SeqT t (* t or SeqT t? *)
+        | _ => raise EmptySeq
+    )
     | Var x => lookup env x
     | Let(x, e1, e2) =>
       let
@@ -35,7 +42,7 @@ fun teval (e: expr) (env: plcType env): plcType =
       in
         teval e2 env'
       end
-    | Letrec(f, ft, p, pt, e1, e2) => raise NotImplemented
+    | Letrec(f, pt, p, rt, e1, e2) => raise NotImplemented
     | Prim1(opr, e1) =>
       let
         val t1 = teval e1 env
@@ -43,14 +50,27 @@ fun teval (e: expr) (env: plcType env): plcType =
         case opr of
             ("!") => if t1 = BoolT then BoolT else raise UnknownType
           | ("-") => if t1 = IntT then IntT else raise UnknownType
-          | ("hd") => raise NotImplemented
-          | ("tl") => raise NotImplemented
-          | ("ise") => raise NotImplemented
-          | ("print") => raise NotImplemented
+          | ("hd") => (
+            case t1 of
+                (SeqT t) => t
+              | _ => raise OpNonList
+          )
+          | ("tl") => (
+            case t1 of
+                (SeqT t) => SeqT t
+              | _ => raise OpNonList
+          )
+          | ("ise") => (
+            case t1 of
+                (SeqT t) => BoolT
+              | _ => raise OpNonList
+          )
+          | ("print") => ListT []
+          | _ => raise UnknownType
       end
     | Prim2(opr, e1, e2) =>
       let
-        val t1 = teval e1 env;
+        val t1 = teval e1 env
         val t2 = teval e2 env
       in
         case opr of
@@ -59,13 +79,22 @@ fun teval (e: expr) (env: plcType env): plcType =
           | ("-") => if t1 = IntT andalso t2 = IntT then IntT else raise UnknownType
           | ("*") => if t1 = IntT andalso t2 = IntT then IntT else raise UnknownType
           | ("/") => if t1 = IntT andalso t2 = IntT then IntT else raise UnknownType
-          | ("=") => raise NotImplemented
-          | ("!=") => raise NotImplemented
+          | ("=") =>
+            if t1 = t2 andalso isEqualityType t1 then
+              BoolT
+            else
+              raise NotEqTypes
+          | ("!=") =>
+            if t1 = t2 andalso isEqualityType t1 then
+              BoolT
+            else
+              raise NotEqTypes
           | ("<") => if t1 = IntT andalso t2 = IntT then BoolT else raise UnknownType
           | ("<=") => if t1 = IntT andalso t2 = IntT then BoolT else raise UnknownType
           | ("::") => raise NotImplemented
           | (";") => t2
           | ("[") => raise NotImplemented
+          | _ => raise UnknownType
       end
     | If(c, t, e) =>
       let
@@ -86,6 +115,23 @@ fun teval (e: expr) (env: plcType env): plcType =
       in
         ListT (typeList el)
       end
-    | Item(idx, e) => raise NotImplemented
+    | Item(idx, e) => 
+      let
+        val t = teval e env
+      in
+        case t of
+            ListT tl =>
+              let
+                fun findIndexType idx [] = raise ListOutOfRange
+                  | findIndexType idx (h::t) =
+                      if idx = 1 then
+                        h
+                      else
+                        findIndexType (idx - 1) t
+              in
+                findIndexType idx tl
+              end
+          | _ => raise OpNonList
+      end
     | Anon(pt, p, e) => raise NotImplemented
-    | _ => raise UnknownType;
+    | _ => raise UnknownType

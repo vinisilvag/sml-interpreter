@@ -35,11 +35,11 @@ use "PlcChecker.sml";
 use "PlcInterp.sml";
 use "Plc.sml";
 
-val abs = fromFile "tests/7.plc";
+val abs = fromFile "tests/15.plc";
 
-(* val v = eval abs venv;
+(* val v = eval abs venv; *)
 val tv = teval abs [];
 
-print("Type: " ^ type2string tv ^ " : " ^ val2string v ) *)
+print("Type: " ^ type2string tv ^ "  ")
 
-val r = run(abs);
+(* val r = run(abs); *)

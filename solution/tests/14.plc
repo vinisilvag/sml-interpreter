@@ -1,0 +1,1 @@
+fun inc(Int x) = x + 1; fun rec fib(Int n):Int = {fun ge2(Int x) = 1 < x ;  if ge2(n) then fib(n-1) + fib(n-2) else 1}; fib(25)

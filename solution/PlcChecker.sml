@@ -31,7 +31,7 @@ fun teval (e: expr) (env: plcType env): plcType =
     | ConB _ => BoolT
     | ESeq seqType => (
         case seqType of
-            (SeqT t) => SeqT t (* t or SeqT t? *)
+            (SeqT t) => SeqT t
           | _ => raise EmptySeq
       )
     | Var x => lookup env x
@@ -42,7 +42,15 @@ fun teval (e: expr) (env: plcType env): plcType =
       in
         teval e2 env'
       end
-    | Letrec(f, pt, p, rt, e1, e2) => raise NotImplemented
+    | Letrec(f, pt, p, rt, e1, e2) =>
+      let
+        val recEnv = ((f, FunT (pt, rt)) :: (p, pt) :: env)
+        val callEnv = ((f, FunT (pt, rt)) :: env)
+        val t1 = teval e1 recEnv
+        val t2 = teval e2 callEnv
+      in
+        if t1 = rt then t2 else raise WrongRetType
+      end
     | Prim1(opr, e1) =>
       let
         val t1 = teval e1 env
@@ -91,7 +99,12 @@ fun teval (e: expr) (env: plcType env): plcType =
               raise NotEqTypes
           | ("<") => if t1 = IntT andalso t2 = IntT then BoolT else raise UnknownType
           | ("<=") => if t1 = IntT andalso t2 = IntT then BoolT else raise UnknownType
-          | ("::") => raise NotImplemented
+          | ("::") => ( (* maybe not fully implemented yet *)
+              case (t1, t2) of
+                  (IntT, SeqT(IntT)) => SeqT(IntT)
+                | (BoolT, SeqT(BoolT)) => SeqT(BoolT)
+                | _ => raise UnknownType
+            )
           | (";") => t2
           | _ => raise UnknownType
       end

@@ -13,7 +13,7 @@ fun eval (e: expr) (env: plcVal env): plcVal =
   case e of
       ConI i => IntV i
     | ConB b => BoolV b
-    | ESeq seqType => raise NotImplemented
+    | ESeq seqType => SeqV []
     | Var x => lookup env x
     | Let(x, e1, e2) =>
       let
@@ -22,7 +22,12 @@ fun eval (e: expr) (env: plcVal env): plcVal =
       in
         eval e2 env'
       end
-    | Letrec(f, pt, p, rt, e1, e2) => raise NotImplemented
+    | Letrec(f, pt, p, rt, e1, e2) =>
+      let
+        val env' = (f, Clos(f, p, e1, env)) :: env
+      in
+        eval e2 env'
+      end
     | Prim1(opr, e1) =>
       let
         val v1 = eval e1 env
@@ -30,7 +35,7 @@ fun eval (e: expr) (env: plcVal env): plcVal =
       in
         case (opr, v1) of
             ("!", BoolV b) => BoolV (not b)
-          | ("-", IntV i) => IntV (~ i)
+          | ("-", IntV i) => IntV (~i)
           | ("hd", _) => raise NotImplemented
           | ("tl", _) => raise NotImplemented
           | ("ise", _) => raise NotImplemented
@@ -64,11 +69,54 @@ fun eval (e: expr) (env: plcVal env): plcVal =
       let
         val cv = eval c env
       in
-        if cv = BoolV (true) then eval t env else eval e env
+        case cv of
+            (BoolV true) => eval t env
+          | (BoolV false) => eval e env
+          | _ => raise Impossible
       end 
-    (* | Match => raise NotImplemented *)
-    | Call(f, e) => raise NotImplemented
-    | List(el) => raise NotImplemented
-    | Item(idx, e) => raise NotImplemented
-    | Anon(pt, p, e) => raise NotImplemented
-    | _ => raise NotImplemented
+    (* | Match(x, ml) => raise NotImplemented *)
+    | Call(f, e) => (* not sure if it's right *)
+      let
+        val fv = eval f env
+      in
+        case fv of
+            Clos(fname, p, fe, fenv) =>
+              let
+                val ev = eval e env
+                val env' = (p, ev) :: (fname, fv) :: env
+              in
+                eval fe env'
+              end
+          | _ => raise NotAFunc
+      end
+    | List(el) =>
+      let
+        fun valList l = 
+          case l of
+              [] => []
+            | (h::t) => eval h env :: (valList t)
+      in
+        ListV (valList el)
+      end
+    | Item(idx, e) =>
+      let
+        val v = eval e env
+      in
+        case v of
+            ListV vl =>
+              let
+                fun findIndexVal idx l =
+                  case l of
+                      [] => raise Impossible
+                    | (h::t) =>
+                      if idx = 1 then
+                        h
+                      else
+                        findIndexVal (idx - 1) t
+              in
+                findIndexVal idx vl
+              end
+          | _ => raise Impossible
+      end
+    | Anon(pt, p, e) => Clos("", p, e, env)
+    | _ => raise Impossible

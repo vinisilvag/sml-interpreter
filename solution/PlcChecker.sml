@@ -103,7 +103,7 @@ fun teval (e: expr) (env: plcType env): plcType =
               case (t1, t2) of
                   (IntT, SeqT(IntT)) => SeqT(IntT)
                 | (BoolT, SeqT(BoolT)) => SeqT(BoolT)
-                | _ => raise UnknownType
+                | _ => raise NotEqTypes
             )
           | (";") => t2
           | _ => raise UnknownType
@@ -118,7 +118,7 @@ fun teval (e: expr) (env: plcType env): plcType =
             BoolT => if tt = et then tt else raise DiffBrTypes
           | _ => raise IfCondNotBool
       end
-    (* | Match => raise NotImplemented *)
+    (* | Match(x, ml) => raise NotImplemented *)
     | Call(f, e) =>
       let
         val ft = teval f env

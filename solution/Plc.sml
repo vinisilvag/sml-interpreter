@@ -1,6 +1,6 @@
 (* Plc interpreter main file *)
 
-fun run (e:expr) = 
+fun run (e: expr) = 
   let
     val et = teval e []
     val ev = eval e []
@@ -26,4 +26,3 @@ fun run (e:expr) =
     | TLEmptySeq => "Plc Interp: 'tl' empty sequence argument."
     | ValueNotFoundInMatch => "Plc Interp: value not found in match."
     | NotAFunc => "Plc Interp: eval Call: not a function.";
-

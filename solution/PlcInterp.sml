@@ -31,15 +31,24 @@ fun eval (e: expr) (env: plcVal env): plcVal =
     | Prim1(opr, e1) =>
       let
         val v1 = eval e1 env
-        val str = val2string v1
       in
         case (opr, v1) of
             ("!", BoolV b) => BoolV (not b)
           | ("-", IntV i) => IntV (~i)
-          | ("hd", _) => raise NotImplemented
-          | ("tl", _) => raise NotImplemented
-          | ("ise", _) => raise NotImplemented
-          | ("print", _) => raise NotImplemented
+          | ("hd", SeqV []) => raise HDEmptySeq
+          | ("hd", SeqV (h::t)) => h
+          | ("tl", SeqV []) => raise TLEmptySeq
+          | ("tl", SeqV (h::[])) => raise TLEmptySeq
+          | ("tl", SeqV (h::t)) => SeqV t
+          | ("ise", SeqV []) => BoolV (true)
+          | ("ise", SeqV (h::t)) => BoolV (false)
+          | ("print", _) =>
+            let
+              val str = val2string(v1)
+              val print = print(str ^ "\n")
+            in
+              ListV []
+            end
           | _ => raise Impossible
       end
     | Prim2(opr, e1, e2) =>

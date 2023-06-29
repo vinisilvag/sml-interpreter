@@ -14,12 +14,6 @@ exception NotFunc
 exception ListOutOfRange
 exception OpNonList
 
-(* temporary exception *)
-exception NotImplemented
-
-fun listLength [] = 0
-  | listLength (h::t) = 1 + (listLength t);
-
 fun indexOnBound idx listLength =
   (idx > 0 andalso idx <= listLength)
 
@@ -88,24 +82,33 @@ fun teval (e: expr) (env: plcType env): plcType =
             | ("-", IntT, IntT) => IntT
             | ("*", IntT, IntT) => IntT
             | ("/", IntT, IntT) => IntT
-            | ("=", t1, t2) =>
-              if t1 = t2 andalso isEqualityType t1 then
-                BoolT
-              else
-                raise NotEqTypes
-            | ("!=", t1, t2) =>
-              if t1 = t2 andalso isEqualityType t1 then
-                BoolT
-              else
-                raise NotEqTypes
+            | ("=", _, _) =>
+                let
+                  val eqt1 = isEqualityType t1
+                  val eqt2 = isEqualityType t2
+                in
+                  if (t1 = t2) andalso eqt1 andalso eqt2 then
+                    BoolT
+                  else
+                    raise NotEqTypes
+                end
+            | ("!=", _, _) =>
+                let
+                  val eqt1 = isEqualityType t1
+                  val eqt2 = isEqualityType t2
+                in
+                  if (t1 = t2) andalso eqt1 andalso eqt2 then
+                    BoolT
+                  else
+                    raise NotEqTypes
+                end
             | ("<", IntT, IntT) => BoolT
             | ("<=", IntT, IntT) => BoolT
-            | ("::", t1, t2) => ( (* maybe not fully implemented yet *)
-                case (t1, t2) of
-                    (IntT, SeqT(IntT)) => SeqT(IntT)
-                  | (BoolT, SeqT(BoolT)) => SeqT(BoolT)
-                  | _ => raise NotEqTypes
-              )
+            | ("::", _, SeqT t) =>
+                if t1 = t then
+                  SeqT t
+                else
+                  raise NotEqTypes
             | (";", _, _) => t2
             | _ => raise UnknownType
         end
@@ -123,7 +126,33 @@ fun teval (e: expr) (env: plcType env): plcType =
                 end
             | _ => raise IfCondNotBool
         end
-    (* | Match(x, ml) => raise NotImplemented *)
+    | Match(x, ml) =>
+        let
+          fun sameCondType typ l =
+            case l of
+                [] => true
+              | (SOME e, _)::l' => (teval x env = typ) andalso (sameCondType typ l')
+              | (NONE, _)::l' => sameCondType typ l'
+          fun sameResType typ l =
+            case l of
+                [] => true
+              | (_, e)::l' => (teval e env = typ) andalso (sameResType typ l')
+        in
+          if sameCondType (teval x env) ml then
+            case ml of
+                [] => raise NoMatchResults
+              | (_, e1)::l' => 
+                  let
+                    val resType = teval e1 env
+                  in
+                    if sameResType resType l' then
+                      resType
+                    else
+                      raise MatchResTypeDiff
+                  end
+          else
+            raise MatchCondTypesDiff
+        end
     | Call(f, e) =>
         let
           val ft = teval f env
@@ -144,7 +173,7 @@ fun teval (e: expr) (env: plcType env): plcType =
                 [] => []
               | (h::t) => (teval h env) :: (typeList t)
         in
-          ListT(typeList el)
+          ListT (typeList el)
         end
     | Item(idx, e) => 
         let
@@ -152,18 +181,10 @@ fun teval (e: expr) (env: plcType env): plcType =
         in
           case t of
               ListT tl =>
-                let
-                  fun findIndexType idx l =
-                    case l of
-                        [] => raise ListOutOfRange
-                      | (h::t) =>
-                        if idx = 1 then
-                          h
-                        else
-                          findIndexType (idx - 1) t
-                in
-                  findIndexType idx tl
-                end
+                if (indexOnBound idx (List.length tl)) then
+                  List.nth(tl, idx - 1)
+                else
+                  raise ListOutOfRange
             | _ => raise OpNonList
         end
     | Anon(pt, p, e) =>
@@ -173,4 +194,3 @@ fun teval (e: expr) (env: plcType env): plcType =
         in
           FunT(pt, rt)
         end
-    | _ => raise UnknownType

@@ -1,0 +1,4 @@
+match 10 with
+| false -> false
+| _ -> true
+end

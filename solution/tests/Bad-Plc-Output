@@ -1,0 +1,16 @@
+36. Symbol not found.
+37. Plc Checker: Type mismatch in function call.
+38. Plc Checker: Types in comparison are different.
+39. Plc Checker: Types in comparison are different.
+40. Plc Checker: Wrong return type in function.
+41. Plc Checker: 'if' branch types differ.
+42. Plc Checker: 'if' condition not Boolean.
+43. Plc Checker: no Match results.
+44. Plc Checker: 'match' result types differ.
+45. true : Bool
+46. teval Call: not a function.
+47. Plc Checker: List index out of range.
+48. Plc Checker: Selection with operator # applied to non-list.
+49. Plc Interp: 'hd' empty sequence argument.
+50. Plc Interp: 'tl' empty sequence argument.
+51. Plc Interp: value not found in match.

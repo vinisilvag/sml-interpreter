@@ -133,25 +133,39 @@ fun teval (e: expr) (env: plcType env): plcType =
       end
     | Match(x, ml) =>
       let
-        val xt = teval x env
         fun conditionTypeIsEqual ct l =
           case l of
               [] => true
-            | ((SOME e, _)::t) => (ct = (teval e env)) andalso (conditionTypeIsEqual ct t)
-            | ((NONE, _)::t) => conditionTypeIsEqual ct t
+            | ((SOME e, _) :: t) =>
+              let
+                val et = teval e env
+                val validType = conditionTypeIsEqual ct t
+              in
+                (ct = et) andalso validType
+              end
+            | ((NONE, _) :: t) => conditionTypeIsEqual ct t
         fun returnTypeIsEqual rt l =
           case l of
               [] => true
-            | ((_, e)::t) => (rt = (teval e env)) andalso (returnTypeIsEqual rt t)
+            | ((_, e) :: t) =>
+              let
+                val et = teval e env
+                val validType = returnTypeIsEqual rt t
+              in
+                (rt = et) andalso validType
+              end 
+        val xt = teval x env
+        val conditionTypeIsValid = conditionTypeIsEqual xt ml
       in
-        if conditionTypeIsEqual xt ml then
+        if conditionTypeIsValid then
           case ml of
               [] => raise NoMatchResults
-            | ((_, r)::t) => 
+            | ((_, r) :: t) => 
                 let
                   val rt = teval r env
+                  val returnTypeIsValid = returnTypeIsEqual rt t
                 in
-                  if returnTypeIsEqual rt t then
+                  if returnTypeIsValid then
                     rt
                   else
                     raise MatchResTypeDiff
@@ -177,7 +191,7 @@ fun teval (e: expr) (env: plcType env): plcType =
         fun typeList l = 
           case l of
               [] => []
-            | (h::t) => (teval h env) :: (typeList t)
+            | (h :: t) => (teval h env) :: (typeList t)
       in
         ListT (typeList el)
       end

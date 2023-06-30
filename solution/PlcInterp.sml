@@ -33,9 +33,9 @@ fun eval (e: expr) (env: plcVal env): plcVal =
             ("!", BoolV b) => BoolV (not b)
           | ("-", IntV i) => IntV (~i)
           | ("hd", SeqV []) => raise HDEmptySeq
-          | ("hd", SeqV (h::t)) => h
+          | ("hd", SeqV (h :: t)) => h
           | ("tl", SeqV []) => raise TLEmptySeq
-          | ("tl", SeqV (h::t)) => SeqV t
+          | ("tl", SeqV (h :: t)) => SeqV t
           | ("ise", SeqV []) => BoolV true
           | ("ise", SeqV _) => BoolV false
           | ("print", _) =>
@@ -79,12 +79,14 @@ fun eval (e: expr) (env: plcVal env): plcVal =
         fun evalMatch v l =
           case l of
               [] => raise ValueNotFoundInMatch
-            | ((SOME e, res)::t) =>
-                if v = (eval e env) then
-                  eval res env
-                else
-                  evalMatch v t
-            | ((NONE, res)::_) => eval res env
+            | ((SOME e, ret) :: t) =>
+              let
+                val et = eval e env
+              in
+                if v = et then (eval ret env)
+                else (evalMatch v t)
+              end
+            | ((NONE, ret) :: _) => eval ret env
         val xv = eval x env
       in
         evalMatch xv ml
@@ -108,7 +110,7 @@ fun eval (e: expr) (env: plcVal env): plcVal =
         fun valList l = 
           case l of
               [] => []
-            | (h::t) => (eval h env) :: (valList t)
+            | (h :: t) => (eval h env) :: (valList t)
       in
         ListV (valList el)
       end

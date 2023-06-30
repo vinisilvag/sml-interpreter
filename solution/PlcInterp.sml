@@ -76,14 +76,14 @@ fun eval (e: expr) (env: plcVal env): plcVal =
       end
     | Match(x, ml) =>
       let
-        fun evalMatch xv l =
+        fun evalMatch v l =
           case l of
               [] => raise ValueNotFoundInMatch
             | ((SOME e, res)::t) =>
-                if xv = (eval e env) then
+                if v = (eval e env) then
                   eval res env
                 else
-                  evalMatch xv t
+                  evalMatch v t
             | ((NONE, res)::_) => eval res env
         val xv = eval x env
       in

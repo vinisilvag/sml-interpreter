@@ -134,11 +134,11 @@ fun teval (e: expr) (env: plcType env): plcType =
     | Match(x, ml) =>
       let
         val xt = teval x env
-        fun conditionTypeIsEqual xt l =
+        fun conditionTypeIsEqual ct l =
           case l of
               [] => true
-            | ((SOME e, _)::t) => (xt = (teval e env)) andalso (conditionTypeIsEqual xt t)
-            | ((NONE, _)::t) => conditionTypeIsEqual xt t
+            | ((SOME e, _)::t) => (ct = (teval e env)) andalso (conditionTypeIsEqual ct t)
+            | ((NONE, _)::t) => conditionTypeIsEqual ct t
         fun returnTypeIsEqual rt l =
           case l of
               [] => true

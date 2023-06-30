@@ -83,8 +83,10 @@ fun eval (e: expr) (env: plcVal env): plcVal =
               let
                 val et = eval e env
               in
-                if v = et then (eval ret env)
-                else (evalMatch v t)
+                if v = et then
+                  eval ret env
+                else
+                  evalMatch v t
               end
             | ((NONE, ret) :: _) => eval ret env
         val xv = eval x env

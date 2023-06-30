@@ -1,4 +1,4 @@
-(* Infrastructure to run the Plc interpreter *)
+(* Infrastructure to run the Plc front-end *)
 
 CM.make("$/basis.cm");
 CM.make("$/ml-yacc-lib.cm");
@@ -20,10 +20,6 @@ use "PlcChecker.sml";
 use "PlcInterp.sml";
 use "Plc.sml";
 
-val abs = fromFile "tests/12.plc";
-val venv = [];
+val abs = fromFile "tests/programs/16.plc";
 
-val tv = teval abs venv;
-val v = eval abs venv;
-
-val r = run(abs);
+run abs;

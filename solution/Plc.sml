@@ -1,6 +1,6 @@
 (* Plc interpreter main file *)
 
-fun run (e: expr) = 
+fun run (e: expr) =
   let
     val et = teval e []
     val ev = eval e []

@@ -1,4 +1,4 @@
-(* Infrastructure to run the Plc interpreter*)
+(* Infrastructure to run the Plc interpreter *)
 
 CM.make("$/basis.cm");
 CM.make("$/ml-yacc-lib.cm");
@@ -20,7 +20,6 @@ use "PlcChecker.sml";
 use "PlcInterp.sml";
 use "Plc.sml";
 use "testCases.sml";
-(*use "ParserReference.sml";*)
 
 val goodOutput = TextIO.openAppend "./tests/Plc-Output";
 val badOutput = TextIO.openAppend "./tests/Bad-Plc-Output";
@@ -39,7 +38,6 @@ fun writeResult r file =
 map (fn x => writeResult (#2(x)) goodOutput) cases;
 
 map (fn x => writeResult (#2(x)) badOutput) bad;
-
 
 TextIO.closeOut goodOutput;
 TextIO.closeOut badOutput;

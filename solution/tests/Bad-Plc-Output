@@ -7,7 +7,7 @@
 42. Plc Checker: 'if' condition not Boolean.
 43. Plc Checker: no Match results.
 44. Plc Checker: 'match' result types differ.
-45. true : Bool
+45. Plc Checker: 'match' condition types differ matching expressions's type.
 46. teval Call: not a function.
 47. Plc Checker: List index out of range.
 48. Plc Checker: Selection with operator # applied to non-list.
